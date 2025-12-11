@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>哆啦 A 梦主题俄罗斯方块</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #0b1220;
+      --text: #e2e8f0;
+      --accent: #5ac8fa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 20%, #14213d 0, transparent 25%),
+                  radial-gradient(circle at 80% 0%, #1e293b 0, transparent 35%),
+                  linear-gradient(135deg, #0b1220 0%, #0f172a 100%);
+      color: var(--text);
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .frame {
+      width: min(1100px, 96vw);
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      background: rgba(11, 18, 32, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+      border-radius: 20px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+    }
+    .left, .right {
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.7), rgba(10, 14, 24, 0.95));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 18px;
+      position: relative;
+    }
+    .title {
+      margin: 0 0 12px;
+      font-size: 28px;
+      letter-spacing: 1px;
+      color: #5ac8fa;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1f2937;
+      color: #f8fafc;
+      font-weight: 700;
+    }
+    canvas {
+      background: #0b1220;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      display: block;
+      margin: 0 auto;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.45);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 12px 0 16px;
+    }
+    .card {
+      padding: 10px;
+      background: #0f172a;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.35);
+    }
+    .label { opacity: 0.75; font-size: 13px; }
+    .value { font-size: 22px; font-weight: 700; color: #f8fafc; }
+    .queues { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+    .panel {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      min-height: 120px;
+    }
+    .panel h3 { margin: 0 0 8px; font-size: 15px; color: #cbd5e1; }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 22px);
+      gap: 2px;
+      justify-content: start;
+      align-items: start;
+      min-height: 88px;
+    }
+    .preview-list {
+      display: grid;
+      gap: 8px;
+      max-height: 280px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    .preview-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: center;
+      background: rgba(255,255,255,0.03);
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .preview-label {
+      font-size: 12px;
+      color: #cbd5e1;
+      width: 40px;
+      text-align: center;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(90,200,250,0.1);
+      border: 1px solid rgba(90,200,250,0.35);
+    }
+    .preview-cell {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .controls { margin-top: 14px; font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(90, 200, 250, 0.12);
+      color: #5ac8fa;
+      border: 1px solid rgba(90, 200, 250, 0.4);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f172a;
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .legend-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #0f172a;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.06), inset 0 0 6px rgba(0,0,0,0.35);
+    }
+    footer { margin-top: 12px; font-size: 12px; opacity: 0.75; text-align: center; }
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0 0;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: linear-gradient(135deg, #5ac8fa, #3288d8);
+      color: #0b1220;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(90, 200, 250, 0.2);
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(90, 200, 250, 0.28); }
+    .btn:active { transform: translateY(1px); box-shadow: 0 6px 14px rgba(90, 200, 250, 0.18); }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <section class="left">
+      <h1 class="title"><span>🔔</span>哆啦 A 梦主题俄罗斯方块</h1>
+      <canvas id="board" width="360" height="720"></canvas>
+    </section>
+    <section class="right">
+      <div class="stats">
+        <div class="card"><div class="label">分数</div><div class="value" id="score">0</div></div>
+        <div class="card"><div class="label">等级</div><div class="value" id="level">1</div></div>
+        <div class="card"><div class="label">消除行</div><div class="value" id="lines">0</div></div>
+        <div class="card"><div class="label">当前角色</div><div class="value" id="current-character">-</div></div>
+      </div>
+      <div class="queues">
+        <div class="panel">
+          <h3 class="tag">NEXT</h3>
+          <div id="next" class="preview-list"></div>
+        </div>
+        <div class="panel">
+          <h3 class="tag">HOLD</h3>
+          <div id="hold" class="preview-grid"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>操作</h3>
+        <div class="controls">
+          ↔ 移动方块 | ↑ 旋转 | ↓ 加速下落 | 空格 直接落底 | Shift 保留方块
+        </div>
+        <div class="actions">
+          <button id="autoplay-toggle" class="btn">暂停自动演示</button>
+        </div>
+        <div class="legend" id="legend"></div>
+        <footer>灵感来自《哆啦 A 梦》的伙伴们，祝游戏愉快！</footer>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const COLS = 10;
+    const ROWS = 20;
+    const BLOCK = 36;
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+
+    const characters = {
+      I: { name: '哆啦 A 梦', color: '#5ac8fa', accent: '#1e90ff', glyph: '哆' },
+      J: { name: '野比大雄', color: '#ffd166', accent: '#fca311', glyph: '雄' },
+      L: { name: '源静香', color: '#ff9aad', accent: '#ff6b81', glyph: '静' },
+      O: { name: '小夫', color: '#b0bec5', accent: '#607d8b', glyph: '夫' },
+      S: { name: '胖虎', color: '#ff7043', accent: '#e64a19', glyph: '虎' },
+      T: { name: '哆啦美', color: '#f8c471', accent: '#f7a446', glyph: '美' },
+      Z: { name: '铜锣烧', color: '#d0a67d', accent: '#a67c52', glyph: '铜' },
+    };
+
+    const shapes = {
+      I: [[1,1,1,1]],
+      J: [[1,0,0],[1,1,1]],
+      L: [[0,0,1],[1,1,1]],
+      O: [[1,1],[1,1]],
+      S: [[0,1,1],[1,1,0]],
+      T: [[0,1,0],[1,1,1]],
+      Z: [[1,1,0],[0,1,1]],
+    };
+
+    const board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+
+    let dropCounter = 0;
+    let dropInterval = 800;
+    let lastTime = 0;
+    let score = 0;
+    let lines = 0;
+    let level = 1;
+    let holdPiece = null;
+    let canHold = true;
+    const nextQueue = [];
+    let autoplayTimer = null;
+    let autoplayActive = true;
+
+    const player = {
+      pos: { x: 3, y: 0 },
+      matrix: null,
+      type: null,
+    };
+
+    function createPiece(type) {
+      return shapes[type].map(row => [...row]);
+    }
+
+    function shuffleBag() {
+      const bag = Object.keys(shapes);
+      for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+      return bag;
+    }
+
+    function refillQueue() {
+      if (nextQueue.length <= 4) {
+        shuffleBag().forEach(type => nextQueue.push(type));
+      }
+    }
+
+    function takeNextPiece() {
+      refillQueue();
+      return nextQueue.shift();
+    }
+
+    function resetPlayer() {
+      let type = takeNextPiece();
+      player.matrix = createPiece(type);
+      player.type = type;
+      player.pos.y = 0;
+      player.pos.x = Math.floor((COLS - player.matrix[0].length) / 2);
+      canHold = true;
+      updateCurrentCharacter();
+      if (collide(board, player)) {
+        board.forEach(row => row.fill(null));
+        score = 0; lines = 0; level = 1; dropInterval = 800;
+        holdPiece = null;
+        nextQueue.length = 0;
+        type = takeNextPiece();
+        player.matrix = createPiece(type);
+        player.type = type;
+        player.pos.y = 0;
+        player.pos.x = Math.floor((COLS - player.matrix[0].length) / 2);
+        updatePanels();
+        updateCurrentCharacter();
+      }
+      updatePreviews();
+    }
+
+    function rotate(matrix, dir) {
+      for (let y = 0; y < matrix.length; ++y) {
+        for (let x = 0; x < y; ++x) {
+          [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+        }
+      }
+      if (dir > 0) matrix.forEach(row => row.reverse());
+      else matrix.reverse();
+    }
+
+    function collide(arena, player) {
+      const [m, o] = [player.matrix, player.pos];
+      for (let y = 0; y < m.length; ++y) {
+        for (let x = 0; x < m[y].length; ++x) {
+          if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== null && arena[y + o.y][x + o.x] !== undefined) {
+            if (arena[y + o.y][x + o.x]) return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    function merge(arena, player) {
+      player.matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value) {
+            arena[y + player.pos.y][x + player.pos.x] = player.type;
+          }
+        });
+      });
+    }
+
+    function arenaSweep() {
+      let rowCount = 0;
+      outer: for (let y = board.length - 1; y >= 0; --y) {
+        if (board[y].every(value => value)) {
+          const row = board.splice(y, 1)[0].fill(null);
+          board.unshift(row);
+          ++rowCount;
+          ++y;
+        }
+      }
+      if (rowCount > 0) {
+        score += [0, 100, 300, 500, 800][rowCount] * level;
+        lines += rowCount;
+        level = 1 + Math.floor(lines / 10);
+        dropInterval = Math.max(120, 800 - (level - 1) * 60);
+        updatePanels();
+      }
+    }
+
+    function drawCell(x, y, type, offsetY = 0) {
+      const { color, accent, glyph } = characters[type];
+      const px = x * BLOCK;
+      const py = (y + offsetY) * BLOCK;
+      const gradient = ctx.createLinearGradient(px, py, px, py + BLOCK);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, accent);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(px + 1, py + 1, BLOCK - 2, BLOCK - 2);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(px + 1, py + 1, BLOCK - 2, BLOCK - 2);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+      ctx.font = 'bold 18px "Segoe UI", "PingFang SC"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(glyph, px + BLOCK / 2, py + BLOCK / 2 + 1);
+    }
+
+    function drawMatrix(matrix, offset) {
+      matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value) {
+            drawCell(x + offset.x, y + offset.y, player.type);
+          }
+        });
+      });
+    }
+
+    function drawBoard() {
+      ctx.fillStyle = '#0b1220';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      board.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value) drawCell(x, y, value, 0);
+        });
+      });
+      drawMatrix(player.matrix, player.pos);
+    }
+
+    function playerMove(dir) {
+      player.pos.x += dir;
+      if (collide(board, player)) {
+        player.pos.x -= dir;
+      }
+    }
+
+    function playerDrop() {
+      player.pos.y++;
+      if (collide(board, player)) {
+        player.pos.y--;
+        merge(board, player);
+        resetPlayer();
+        arenaSweep();
+      }
+      dropCounter = 0;
+    }
+
+    function hardDrop() {
+      while (!collide(board, player)) {
+        player.pos.y++;
+      }
+      player.pos.y--;
+      merge(board, player);
+      resetPlayer();
+      arenaSweep();
+      dropCounter = 0;
+    }
+
+    function playerRotate(dir) {
+      const pos = player.pos.x;
+      rotate(player.matrix, dir);
+      let offset = 1;
+      while (collide(board, player)) {
+        player.pos.x += offset;
+        offset = -(offset + (offset > 0 ? 1 : -1));
+        if (offset > player.matrix[0].length) {
+          rotate(player.matrix, -dir);
+          player.pos.x = pos;
+          return;
+        }
+      }
+    }
+
+    function holdCurrent() {
+      if (!canHold) return;
+      if (holdPiece === null) {
+        holdPiece = player.type;
+        resetPlayer();
+      } else {
+        [holdPiece, player.type] = [player.type, holdPiece];
+        player.matrix = createPiece(player.type);
+        player.pos.y = 0;
+        player.pos.x = Math.floor((COLS - player.matrix[0].length) / 2);
+        updateCurrentCharacter();
+      }
+      canHold = false;
+      updatePreviews();
+    }
+
+    function updatePanels() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('lines').textContent = lines;
+      document.getElementById('level').textContent = level;
+    }
+
+    function renderPreviewGrid(type) {
+      const fragment = document.createDocumentFragment();
+      const matrix = type ? createPiece(type) : Array.from({ length: 4 }, () => Array(4).fill(0));
+      for (let y = 0; y < 4; y++) {
+        for (let x = 0; x < 4; x++) {
+          const cell = document.createElement('div');
+          cell.className = 'preview-cell';
+          if (type && matrix[y] && matrix[y][x]) {
+            cell.style.background = characters[type].color;
+            cell.textContent = characters[type].glyph;
+          }
+          fragment.appendChild(cell);
+        }
+      }
+      return fragment;
+    }
+
+    function renderNextQueue() {
+      const container = document.getElementById('next');
+      container.innerHTML = '';
+      const list = nextQueue.slice(0, 5);
+      if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'preview-item';
+        empty.textContent = '队列生成中…';
+        container.appendChild(empty);
+        return;
+      }
+      list.forEach((type, idx) => {
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+
+        const label = document.createElement('div');
+        label.className = 'preview-label';
+        label.textContent = `#${idx + 1}`;
+
+        const grid = document.createElement('div');
+        grid.className = 'preview-grid';
+        grid.appendChild(renderPreviewGrid(type));
+
+        item.appendChild(label);
+        item.appendChild(grid);
+        container.appendChild(item);
+      });
+    }
+
+    function renderHold() {
+      const container = document.getElementById('hold');
+      container.innerHTML = '';
+      container.className = 'preview-grid';
+      container.appendChild(renderPreviewGrid(holdPiece));
+    }
+
+    function updatePreviews() {
+      renderNextQueue();
+      renderHold();
+    }
+
+    function updateCurrentCharacter() {
+      const info = characters[player.type];
+      document.getElementById('current-character').textContent = info?.name || '-';
+    }
+
+    function cloneBoard(src) {
+      return src.map(row => [...row]);
+    }
+
+    function rotateMatrix(matrix, times = 0) {
+      const clone = matrix.map(row => [...row]);
+      const tempPlayer = { pos: { x: 0, y: 0 }, matrix: clone };
+      for (let i = 0; i < times; i++) {
+        rotate(tempPlayer.matrix, 1);
+      }
+      return tempPlayer.matrix;
+    }
+
+    function placeMatrix(targetBoard, matrix, pos) {
+      matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value) {
+            targetBoard[y + pos.y][x + pos.x] = player.type;
+          }
+        });
+      });
+    }
+
+    function countHoles(targetBoard) {
+      let holes = 0;
+      for (let x = 0; x < COLS; x++) {
+        let blockFound = false;
+        for (let y = 0; y < ROWS; y++) {
+          if (targetBoard[y][x]) {
+            blockFound = true;
+          } else if (blockFound) {
+            holes++;
+          }
+        }
+      }
+      return holes;
+    }
+
+    function columnHeights(targetBoard) {
+      const heights = [];
+      for (let x = 0; x < COLS; x++) {
+        let h = 0;
+        for (let y = 0; y < ROWS; y++) {
+          if (targetBoard[y][x]) {
+            h = ROWS - y;
+            break;
+          }
+        }
+        heights.push(h);
+      }
+      return heights;
+    }
+
+    function findBestAutoplayMove() {
+      let best = null;
+      const type = player.type;
+      for (let r = 0; r < 4; r++) {
+        const rotated = rotateMatrix(createPiece(type), r);
+        for (let x = -2; x < COLS; x++) {
+          const tempPlayer = { pos: { x, y: 0 }, matrix: rotated };
+          if (collide(board, tempPlayer)) continue;
+          while (!collide(board, tempPlayer)) {
+            tempPlayer.pos.y++;
+          }
+          tempPlayer.pos.y--;
+          if (tempPlayer.pos.y < 0) continue;
+
+          const virtualBoard = cloneBoard(board);
+          placeMatrix(virtualBoard, rotated, tempPlayer.pos);
+          const fullLines = virtualBoard.filter(row => row.every(Boolean)).length;
+          const holes = countHoles(virtualBoard);
+          const heights = columnHeights(virtualBoard);
+          const aggregateHeight = heights.reduce((a, b) => a + b, 0);
+          const bumpiness = heights
+            .slice(1)
+            .reduce((a, h, i) => a + Math.abs(h - heights[i]), 0);
+
+          const score = fullLines * 6 - holes * 3 - aggregateHeight * 0.25 - bumpiness * 0.5;
+          if (!best || score > best.score) {
+            best = { x, rotations: r, score };
+          }
+        }
+      }
+      return best;
+    }
+
+    function autoplayStep() {
+      if (!autoplayActive) return;
+      const move = findBestAutoplayMove();
+      if (move) {
+        player.matrix = rotateMatrix(createPiece(player.type), move.rotations);
+        player.pos.x = move.x;
+        player.pos.y = 0;
+        hardDrop();
+      } else {
+        hardDrop();
+      }
+    }
+
+    function startAutoplay() {
+      if (autoplayTimer) return;
+      autoplayActive = true;
+      document.getElementById('autoplay-toggle').textContent = '暂停自动演示';
+      autoplayTimer = setInterval(autoplayStep, 500);
+    }
+
+    function stopAutoplay() {
+      autoplayActive = false;
+      document.getElementById('autoplay-toggle').textContent = '恢复自动演示';
+      if (autoplayTimer) {
+        clearInterval(autoplayTimer);
+        autoplayTimer = null;
+      }
+    }
+
+    function toggleAutoplay() {
+      if (autoplayActive) {
+        stopAutoplay();
+      } else {
+        startAutoplay();
+      }
+    }
+
+    function buildLegend() {
+      const legend = document.getElementById('legend');
+      legend.innerHTML = '';
+      Object.entries(characters).forEach(([key, info]) => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        const swatch = document.createElement('div');
+        swatch.className = 'legend-swatch';
+        swatch.style.background = info.color;
+        swatch.textContent = info.glyph;
+        const text = document.createElement('div');
+        text.innerHTML = `<strong>${info.name}</strong><br/><small>${key} 形状</small>`;
+        item.appendChild(swatch);
+        item.appendChild(text);
+        legend.appendChild(item);
+      });
+    }
+
+    function update(time = 0) {
+      const deltaTime = time - lastTime;
+      lastTime = time;
+      dropCounter += deltaTime;
+      if (dropCounter > dropInterval) {
+        playerDrop();
+      }
+      drawBoard();
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener('keydown', event => {
+      switch (event.key) {
+        case 'ArrowLeft': playerMove(-1); break;
+        case 'ArrowRight': playerMove(1); break;
+        case 'ArrowDown': playerDrop(); break;
+        case 'ArrowUp': playerRotate(1); break;
+        case ' ': hardDrop(); break;
+        case 'Shift':
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          holdCurrent();
+          break;
+      }
+    });
+
+    document.getElementById('autoplay-toggle').addEventListener('click', toggleAutoplay);
+
+    buildLegend();
+    refillQueue();
+    resetPlayer();
+    startAutoplay();
+    update();
+  </script>
+</body>
+</html>

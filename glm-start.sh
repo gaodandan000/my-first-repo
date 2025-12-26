@@ -2,7 +2,12 @@
 # GLM API 启动脚本
 # 模拟 glm CLI 工具功能：加载环境变量并启动 Claude Code
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# 解析符号链接到实际脚本路径
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+if [ -L "$SCRIPT_PATH" ]; then
+    SCRIPT_PATH="$(readlink -f "$SCRIPT_PATH")"
+fi
+SCRIPT_DIR="$( cd "$( dirname "$SCRIPT_PATH" )" && pwd )"
 ENV_FILE="$SCRIPT_DIR/.env"
 
 # 检查 .env 文件是否存在

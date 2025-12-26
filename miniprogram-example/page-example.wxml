@@ -1,0 +1,18 @@
+<!-- 小程序页面示例 -->
+<view class="container">
+  <view class="title">微信小程序 OpenID 获取示例</view>
+
+  <view class="openid-section">
+    <text class="label">您的 OpenID:</text>
+    <text class="openid">{{openid || '未获取'}}</text>
+  </view>
+
+  <button class="btn" bindtap="onGetOpenIdClick">获取 OpenID</button>
+
+  <view class="tips">
+    <text class="tips-title">说明：</text>
+    <text>1. 点击按钮获取您的微信 OpenID</text>
+    <text>2. OpenID 可用于 Coze 智能体识别用户</text>
+    <text>3. OpenID 会自动保存到本地存储</text>
+  </view>
+</view>

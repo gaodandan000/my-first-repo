@@ -1,0 +1,19 @@
+{
+  "name": "my-first-repo",
+  "version": "0.1.0",
+  "description": "GLM Coding - AI项目工具包",
+  "scripts": {
+    "摸鱼": "python3 scripts/moyu.py",
+    "moyu": "python3 scripts/moyu.py",
+    "setup": "./scripts/setup.sh",
+    "test": "pytest tests/"
+  },
+  "keywords": [
+    "glm",
+    "ai",
+    "coding",
+    "zhipu"
+  ],
+  "author": "",
+  "license": "MIT"
+}

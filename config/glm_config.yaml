@@ -1,0 +1,56 @@
+# GLM Coding Configuration
+# 智谱AI GLM配置文件
+
+# API配置
+api:
+  # API密钥 (请在环境变量中设置 GLM_API_KEY)
+  api_key: ${GLM_API_KEY}
+  # API基础URL
+  base_url: "https://open.bigmodel.cn/api/paas/v4"
+  # 超时设置（秒）
+  timeout: 60
+
+# 模型配置
+model:
+  # 默认模型名称
+  # 可选: glm-4, glm-4-plus, glm-4-air, glm-4-flash, glm-3-turbo
+  name: "glm-4"
+  # 温度参数 (0.0-1.0)
+  temperature: 0.7
+  # top_p参数
+  top_p: 0.9
+  # 最大token数
+  max_tokens: 2048
+
+# 代码生成配置
+coding:
+  # 编程语言偏好
+  preferred_languages:
+    - python
+    - javascript
+    - java
+    - go
+  # 代码风格
+  style: "clean"
+  # 是否包含注释
+  include_comments: true
+  # 是否包含测试
+  include_tests: true
+
+# 项目配置
+project:
+  # 项目名称
+  name: "my-first-repo"
+  # 项目描述
+  description: "AI项目/脚本/文档"
+  # 版本
+  version: "0.1.0"
+
+# 日志配置
+logging:
+  # 日志级别
+  level: "INFO"
+  # 日志文件路径
+  file: "logs/glm_coding.log"
+  # 是否输出到控制台
+  console: true
